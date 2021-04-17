@@ -11,3 +11,6 @@ color 02
 set startdir="%~dp0"
 set startdir=%startdir:~0,-2%
 call :dequote startdir
+
+:setWorkDIR
+set workdir=%startdir%\data
