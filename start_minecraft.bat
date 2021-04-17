@@ -2,7 +2,7 @@
 title Minecraft 'portable' launcher.
 color 02
 
-:: Name: start_minecraft.bata
+:: Name: start_minecraft.bat
 :: Purpose: A batch script that allows Minecraft to be run portable.
 :: Author: https://github.com/hemiipatu
 :: Revision/Commit History: https://github.com/hemiipatu/MinecraftPortable/commits/master
