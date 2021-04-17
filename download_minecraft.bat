@@ -16,4 +16,4 @@ mkdir data
 cd bin
 
 :: Download Minecraft.exe and change the name to 'MinecraftLauncher.exe'.
-wget https://launcher.mojang.com/download/Minecraft.exe -O MinecraftLauncher.exe
+curl https://launcher.mojang.com/download/Minecraft.exe > MinecraftLauncher.exe
