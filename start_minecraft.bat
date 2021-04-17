@@ -17,3 +17,6 @@ set workdir=%startdir%\data
 
 :setLockDIR
 set lockdir=%startdir%\data\.minecraft
+
+:setJavaHome
+set java_home=%startdir%\bin\runtime\jdk-15.0.2\bin
