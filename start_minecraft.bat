@@ -10,3 +10,4 @@ color 02
 :setVariable
 set startdir="%~dp0"
 set startdir=%startdir:~0,-2%
+call :dequote startdir
