@@ -14,3 +14,6 @@ call :dequote startdir
 
 :setWorkDIR
 set workdir=%startdir%\data
+
+:setLockDIR
+set lockdir=%startdir%\data\.minecraft
