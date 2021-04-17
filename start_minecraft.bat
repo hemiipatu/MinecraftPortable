@@ -23,3 +23,6 @@ set java_home=%startdir%\bin\runtime\jdk-15.0.2\bin
 
 :setPath
 set path=%startdir%\bin\runtime\jdk-15.0.2\bin
+
+:start
+start "" "%startdir%\bin\MinecraftLauncher.exe" --workDir "%workdir%" --lockDir  "%lockdir%"
