@@ -26,3 +26,6 @@ set path=%startdir%\bin\runtime\jdk-15.0.2\bin
 
 :start
 start "" "%startdir%\bin\MinecraftLauncher.exe" --workDir "%workdir%" --lockDir  "%lockdir%"
+
+:deQuote
+for /f "delims=" %%A in ('echo %%%1%%') do set %1=%%~A
