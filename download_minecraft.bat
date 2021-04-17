@@ -9,3 +9,5 @@ color 02
 
 :: Create directories/folders required to run Minecraft as a portable application.
 mkdir -p bin bin\runtime cache data
+
+curl https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe
