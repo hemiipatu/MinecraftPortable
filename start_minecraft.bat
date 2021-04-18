@@ -27,6 +27,8 @@ set path=%startdir%\bin\runtime\jdk-15.0.2\bin
 :checkExists
 IF exist bin\MinecraftLauncher.exe (
   goto start 
+) ELSE (
+  mkdir bin bin\runtime cache data && curl https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe
 )
 
 :start
