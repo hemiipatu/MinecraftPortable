@@ -16,7 +16,7 @@ The script creates the following directories:
  - **_bin_** | Used to store _MinecraftLauncher.exe_ and is later used by the launcher itself.
  - **_bin\runtime_** | Used to store JavaJDK/JRE.
  - **_cache_** | Used by the launcher itself to cache game files - remains unused until first launch.
- - **_data_** | Use to store game data, containing what would otherwise be found in .minecraft.
+ - **_data_** | Used to store game data, containing what would otherwise be found in .minecraft.
   
 ## How to install
  - [Instructions for Windows]()
