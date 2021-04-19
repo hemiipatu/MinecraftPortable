@@ -9,7 +9,7 @@
 &nbsp;
 
 ## What is MinecraftPortable
-MinecraftPortable is a script which allows the official Minecraft client to be run as a portable application. It achieves this by storing all the games' data in folders it generates as opposed to _"%appdata%\.minecraft"_ on Windows or _"~/.minecraft"_ on Linux.
+MinecraftPortable is a script which allows the official Minecraft client to be run as a portable application. It achieves this by storing all the games' data in folders it generates as opposed to _"%appdata%/.minecraft"_ on Windows or _"~/.minecraft"_ on Linux.
 
 ## Where and how are the game files saved
 The script creates the following directories:
