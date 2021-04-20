@@ -24,15 +24,19 @@ set java_home=%startdir%\bin\runtime\jdk-15.0.2\bin
 :setPath
 set path=%startdir%\bin\runtime\jdk-15.0.2\bin
 
-rem :checkExists
-rem IF exist bin\MinecraftLauncher.exe (
-rem     goto start
-rem ) ELSE (
-rem     mkdir bin bin\runtime cache data && curl https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe && goto start
-rem )
+:checkExists
+if exist bin\MinecraftLauncher.exe (
+    goto start
+) else (
+    mkdir bin bin\runtime cache data && curl https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe && goto start
+)
 
 :start
 start "" "%startdir%\bin\MinecraftLauncher.exe" --workDir "%workdir%" --lockDir  "%lockdir%"
+goto end
 
 :deQuote
-FOR /f "delims=" %%A in ('echo %%%1%%') do set %1=%%~A
+for /f "delims=" %%A in ('echo %%%1%%') do set %1=%%~A
+
+:end
+exit
