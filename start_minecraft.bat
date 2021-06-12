@@ -19,10 +19,10 @@ set workdir=%startdir%\data
 set lockdir=%startdir%\data\.minecraft
 
 :setJavaHome
-set java_home=%startdir%\bin\runtime\jdk-15.0.2\bin
+set java_home=%startdir%\bin\runtime\jdk-16.0.1\bin
 
 :setPath
-set path=%startdir%\bin\runtime\jdk-15.0.2\bin
+set path=%startdir%\bin\runtime\jdk-16.0.1\bin
 
 :setCurl
 set curl=%systemroot%\system32\curl.exe
