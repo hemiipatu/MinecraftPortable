@@ -31,7 +31,7 @@ set curl=%systemroot%\system32\curl.exe
 if exist bin\MinecraftLauncher.exe (
     goto start
 ) else (
-    mkdir bin bin\runtime cache data && %curl% https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe && goto start
+    mkdir bin bin\runtime cache data && %curl% https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe && %curl% -jkL -H "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jdk/16.0.1+9/7147401fd7354114ac51ef3e1328291f/jdk-16.0.1_windows-x64_bin.zip > bin/runtime/jdk-16.0.1.zip && goto start
 )
 
 :start
