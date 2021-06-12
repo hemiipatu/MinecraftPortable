@@ -24,11 +24,14 @@ set java_home=%startdir%\bin\runtime\jdk-15.0.2\bin
 :setPath
 set path=%startdir%\bin\runtime\jdk-15.0.2\bin
 
+:setCurl
+set curl=%systemroot%\system32\curl.exe
+
 :checkExists
 if exist bin\MinecraftLauncher.exe (
     goto start
 ) else (
-    mkdir bin bin\runtime cache data && curl https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe && goto start
+    mkdir bin bin\runtime cache data && %curl% https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe && goto start
 )
 
 :start
