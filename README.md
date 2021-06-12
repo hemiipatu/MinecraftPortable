@@ -19,7 +19,7 @@ The script creates the following directories:
  - **_data_** | Used to store game data, containing what would otherwise be found in .minecraft.
   
 ## How to install
- - [Instructions for Windows]()
+ - [Instructions for Windows](https://github.com/hemiipatu/MinecraftPortable/wiki/Installation-on-Windows-10.)
  - [Instructions for Linux]()
 
 ## Supporting MinecraftPortable project
