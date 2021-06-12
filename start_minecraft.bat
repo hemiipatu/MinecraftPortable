@@ -37,6 +37,7 @@ goto end
 
 :deQuote
 for /f "delims=" %%A in ('echo %%%1%%') do set %1=%%~A
+goto setWorkDIR
 
 :end
 exit
