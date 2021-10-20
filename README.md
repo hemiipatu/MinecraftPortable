@@ -12,15 +12,18 @@
 MinecraftPortable is a script which allows the official Minecraft client to be run as a portable application. It achieves this by storing all the games' data in folders it generates as opposed to _"%appdata%/.minecraft"_ on Windows or _"~/.minecraft"_ on Linux.
 
 ## Where and how are the game files saved
-The script creates the following directories:
+The script creates the following directories on Windows:
  - **_bin_** | Used to store _MinecraftLauncher.exe_ and is later used by the launcher itself.
  - **_bin\runtime_** | Used to store JavaJDK/JRE.
  - **_cache_** | Used by the launcher itself to cache game files - remains unused until first launch.
  - **_data_** | Used to store game data, containing what would otherwise be found in .minecraft.
+
+ The script creates the following directories on Linux:
+ - **_Nothing_** | Nothing is created yet because the Linux functionality has yet to be made. WIP.
   
 ## How to install
  - [Instructions for Windows](https://github.com/hemiipatu/MinecraftPortable/wiki/Installation-on-Windows-10.)
- - [Instructions for Linux]()
+ - [Instructions for Linux | WIP]()
 
 ## Supporting MinecraftPortable project
 If you are intrested in supporting the project you can:
