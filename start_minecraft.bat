@@ -19,10 +19,10 @@ set workdir=%startdir%\data
 set lockdir=%startdir%\data\.minecraft
 
 :setJavaHome
-set java_home=%startdir%\bin\runtime\jdk-16.0.1\bin
+set java_home=%startdir%\bin\runtime\jdk-17.0.2\bin
 
 :setPath
-set path=%startdir%\bin\runtime\jdk-16.0.1\bin
+set path=%startdir%\bin\runtime\jdk-17.0.2\bin
 
 :setCurl
 set curl=%systemroot%\system32\curl.exe
@@ -38,11 +38,11 @@ if exist bin\MinecraftLauncher.exe (
 )
 
 else (
-    %curl% -jkL -H "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jdk/16.0.1+9/7147401fd7354114ac51ef3e1328291f/jdk-16.0.1_windows-x64_bin.zip > bin/runtime/jdk-16.0.1.zip
+    %curl% -jkL -H "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/java/17/archive/jdk-17.0.2_windows-x64_bin.zip > bin/runtime/jdk-17.0.2.zip
 )
 
 else (
-    %tar% -xvf bin/runtime/jdk-16.0.1.zip -C bin/runtime/
+    %tar% -xvf bin/runtime/jdk-17.0.2.zip -C bin/runtime/
 )
 
 :start
