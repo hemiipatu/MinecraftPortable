@@ -17,11 +17,13 @@ The script creates the following directories on Windows:
  - **_bin\runtime_** | Used to store JavaJDK/JRE.
  - **_cache_** | Used by the launcher itself to cache game files - remains unused until first launch.
  - **_data_** | Used to store game data, containing what would otherwise be found in .minecraft.
- 
- The script will also download the MinecraftLauncher.exe and Java.exe from their respective sites.
 
- The script creates the following directories on Linux:
- - **_Nothing_** | Nothing is created yet because the Linux functionality has yet to be made. WIP.
+The script will use the above directories to download and store:
+ - **_Minecraft.exe_** | The official minecraft.exe downloaded from its' respective site.
+ - **_Java.zip_** | The official Java.zip downloaded from its' respective site which is unpacked using tar.
+
+The script creates the following directories on Linux:
+ - **_Nothing_** | Functionality for Linux is not present and therefor will do nothing.
   
 ## How to install
  - [Instructions for Windows](https://github.com/hemiipatu/MinecraftPortable/wiki/Installation-on-Windows-10.)
