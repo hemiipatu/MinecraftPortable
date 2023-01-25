@@ -17,6 +17,8 @@ The script creates the following directories on Windows:
  - **_bin\runtime_** | Used to store JavaJDK/JRE.
  - **_cache_** | Used by the launcher itself to cache game files - remains unused until first launch.
  - **_data_** | Used to store game data, containing what would otherwise be found in .minecraft.
+ 
+ The script will also download the MinecraftLauncher.exe and Java.exe from their respective sites.
 
  The script creates the following directories on Linux:
  - **_Nothing_** | Nothing is created yet because the Linux functionality has yet to be made. WIP.
