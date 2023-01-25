@@ -7,51 +7,45 @@ color 02
 :: Author: https://github.com/hemiipatu
 :: Revision/Commit History: https://github.com/hemiipatu/MinecraftPortable/commits/master
 
-:setVariable
-set startdir="%~dp0"
-set startdir=%startdir:~0,-2%
-call :dequote startdir
+:setLocationRootDir
+set location=%~dp0
+set locationroot=%location%
+IF "%location:~-1%" == "\" (
+    set "locationroot=%location:~0,-1%" && goto setJavaDir
+) ELSE goto setJavaDir
 
-:setWorkDIR
-set workdir=%startdir%\data
-
-:setLockDIR
-set lockdir=%startdir%\data\.minecraft
-
-:setJavaHome
-set java_home=%startdir%\bin\runtime\jdk-17.0.2\bin
-
-:setPath
-set path=%startdir%\bin\runtime\jdk-17.0.2\bin
+:setJavaDir
+set versjava=19
+set verljava=jdk-19.0.2
+set locationjava=%locationroot%\bin\runtime\%verljava%\bin
+    goto setCurl
 
 :setCurl
 set curl=%systemroot%\system32\curl.exe
+    goto setTar
 
 :setTar
 set tar=%systemroot%\system32\tar.exe
+    goto checkLauncherPrerequisites
 
-:checkExists
-if exist bin\MinecraftLauncher.exe (
-    goto start
-) else (
-    mkdir bin bin\runtime cache data && %curl% https://launcher.mojang.com/download/Minecraft.exe > bin/MinecraftLauncher.exe
-)
+:: Begin the process of checking prerequisites.
+:checkLauncherPrerequisites
+IF NOT exist %locationroot%\bin\MinecraftLauncher.exe (
+    mkdir %locationroot%\bin %locationroot%\bin\runtime %locationroot%\cache %locationroot%\data && %curl% https://launcher.mojang.com/download/Minecraft.exe > %locationroot%/bin/MinecraftLauncher.exe
+) ELSE goto checkJavaPrerequisites
 
-else (
-    %curl% -jkL -H "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/java/17/archive/jdk-17.0.2_windows-x64_bin.zip > bin/runtime/jdk-17.0.2.zip
-)
+:checkJavaPrerequisites
+IF NOT exist %locationjava%\java.exe (
+    %curl% -H "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/java/%versjava%/archive/%verljava%_windows-x64_bin.zip > %locationroot%/bin/runtime/%verljava%.zip && goto unzip
+) ELSE goto start
 
-else (
-    %tar% -xvf bin/runtime/jdk-17.0.2.zip -C bin/runtime/
-)
+:unzip
+%tar% -xvf %locationroot%/bin/runtime/%verljava%.zip -C %locationroot%/bin/runtime/
+goto start
 
 :start
-start "" "%startdir%\bin\MinecraftLauncher.exe" --workDir "%workdir%" --lockDir  "%lockdir%"
+start "" "%locationroot%\bin\MinecraftLauncher.exe" --workDir "%locationroot%\data" --lockDir  "%locationroot%\data\.minecraft"
 goto end
-
-:deQuote
-for /f "delims=" %%A in ('echo %%%1%%') do set %1=%%~A
-goto setWorkDIR
 
 :end
 exit
