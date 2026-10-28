@@ -7,30 +7,30 @@ import zipfile
 import tarfile
 from pathlib import Path
 
-# NOTE: This script requires the 'requests' library (pip install requests) for optimized downloads.
+# Optional dependency: requests is needed only when a download is required.
 try:
     import requests
 except ImportError:
     requests = None
 
-# --- Configuration ---
+# Configuration
 JAVA_LTS_VERSION = "25"
 
-# Official Download Links
+# Launcher configuration
 LAUNCHER_URL_WIN = "https://launcher.mojang.com/download/Minecraft.exe"
 LAUNCHER_URL_LINUX_TAR = "https://launcher.mojang.com/download/Minecraft.tar.gz"
 
-# --- Define Paths ---
+# Paths
 LOCATION_ROOT = Path(sys.argv[0]).resolve().parent
 
 BIN_DIR = LOCATION_ROOT / "bin"
 RUNTIME_PATH = BIN_DIR / "runtime"
 DATA_DIR = LOCATION_ROOT / "data"
 
-# Platform Detection
+# Platform settings
 SYSTEM = platform.system()
 
-# --- Launcher Setup ---
+# Launcher paths
 if SYSTEM == "Windows":
     LAUNCHER_URL = LAUNCHER_URL_WIN
     LAUNCHER_FILENAME = "MinecraftLauncher.exe"
@@ -38,7 +38,7 @@ if SYSTEM == "Windows":
     LAUNCHER_DOWNLOAD_FILE = LAUNCHER_PATH
     
 elif SYSTEM == "Darwin": # macOS
-    # NOTE: Mac requires manual placement due to .dmg installer complexity.
+    # Install the .app bundle manually under bin before running this script.
     LAUNCHER_URL = None 
     LAUNCHER_FILENAME = "MinecraftLauncher.app"
     LAUNCHER_PATH = BIN_DIR / LAUNCHER_FILENAME
@@ -46,10 +46,9 @@ elif SYSTEM == "Darwin": # macOS
 else: # Linux
     LAUNCHER_URL = LAUNCHER_URL_LINUX_TAR
     LAUNCHER_DOWNLOAD_FILE = BIN_DIR / "MinecraftLauncher.tar.gz"
-    # The executable inside the extracted tarball is typically named 'minecraft-launcher'
     LAUNCHER_PATH = BIN_DIR / "minecraft-launcher"
     
-# --- Java Setup ---
+# Java runtime paths
 if SYSTEM == "Windows":
     JAVA_ARCHIVE_EXT = "zip"
     JAVA_API_OS = "windows"
@@ -69,7 +68,7 @@ JAVA_DIR = RUNTIME_PATH / f"temurin-{JAVA_LTS_VERSION}"
 JAVA_HOME = JAVA_DIR / "Contents" / "Home" if SYSTEM == "Darwin" else JAVA_DIR
 JAVA_EXE_PATH = JAVA_HOME / "bin" / JAVA_EXE_SUFFIX
 
-# --- Optimized Helper Function ---
+# Helpers
 def download_file(url: str, destination: Path, headers=None) -> bool:
     """Optimized download using requests, streaming to handle large files efficiently."""
     if requests is None:
@@ -81,7 +80,7 @@ def download_file(url: str, destination: Path, headers=None) -> bool:
     print(f"Downloading {filename}...")
     try:
         with requests.get(url, headers=headers or {}, stream=True, timeout=30) as r:
-            r.raise_for_status() # Raise exception for bad status codes (4xx or 5xx)
+            r.raise_for_status()
             with open(temporary_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=1024 * 1024):
                     if chunk:
@@ -131,22 +130,19 @@ def safe_extract_tar(archive_path: Path, destination: Path) -> None:
                 raise RuntimeError(f"Unsafe TAR member: {member.name}")
         archive.extractall(destination)
 
-# --- Core Functions ---
+# Download and install launcher
 def check_and_install_launcher():
     """Checks for, downloads, and prepares the Minecraft Launcher."""
     print("\n## 🚀 Checking for Minecraft Launcher...")
     
-    # 1. Ensure directories exist
     BIN_DIR.mkdir(parents=True, exist_ok=True)
     RUNTIME_PATH.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     
-    # 2. Check if Launcher exists
     if LAUNCHER_PATH.exists():
         print("Minecraft Launcher found. Skipping download.")
         return
 
-    # 3. Handle Download and Installation
     print("Launcher not found. Attempting to install...")
 
     if SYSTEM == "Windows":
@@ -162,13 +158,12 @@ def check_and_install_launcher():
         if not download_file(LAUNCHER_URL, LAUNCHER_DOWNLOAD_FILE):
             sys.exit(1)
         
-        # Extract Linux Tarball
         print("Extracting Linux launcher...")
         try:
             safe_extract_tar(LAUNCHER_DOWNLOAD_FILE, BIN_DIR)
             
-            LAUNCHER_DOWNLOAD_FILE.unlink() # Delete the archive file
-            LAUNCHER_PATH.chmod(0o755) # Ensure the executable is runnable
+            LAUNCHER_DOWNLOAD_FILE.unlink()
+            LAUNCHER_PATH.chmod(0o755)
         except Exception as e:
             print(f"ERROR: Failed to extract Linux Launcher. Error: {e}")
             sys.exit(1)
@@ -177,7 +172,7 @@ def check_and_install_launcher():
         print("ERROR: Failed to verify Minecraft Launcher installation. Exiting.")
         sys.exit(1)
 
-# --- Java Installation (Optimized) ---
+# Download and install Java runtime
 def check_and_install_java():
     """Checks for, downloads, and extracts the platform-specific Java Runtime."""
     print("\n## ☕ Checking for Java Runtime...")
@@ -190,7 +185,6 @@ def check_and_install_java():
     if not download_file(JAVA_URL, JAVA_ARCHIVE_PATH):
         sys.exit(1)
             
-    # Extract Java
     print(f"Extracting Adoptium LTS {JAVA_LTS_VERSION} JDK...")
     extract_path = RUNTIME_PATH / f"temurin-{JAVA_LTS_VERSION}-extract"
     try:
@@ -200,7 +194,7 @@ def check_and_install_java():
 
         if JAVA_ARCHIVE_EXT == "zip":
             safe_extract_zip(JAVA_ARCHIVE_PATH, extract_path)
-        else: # tar.gz (Mac/Linux)
+        else:
             safe_extract_tar(JAVA_ARCHIVE_PATH, extract_path)
 
         extracted_root = next((path for path in extract_path.iterdir() if path.is_dir()), None)
@@ -215,7 +209,7 @@ def check_and_install_java():
             shutil.rmtree(JAVA_DIR)
         extracted_root.replace(JAVA_DIR)
         
-        JAVA_ARCHIVE_PATH.unlink() # Delete the archive file
+        JAVA_ARCHIVE_PATH.unlink()
         
     except Exception as e:
         shutil.rmtree(extract_path, ignore_errors=True)
@@ -229,13 +223,11 @@ def check_and_install_java():
         print("ERROR: Failed to verify extracted Java Runtime. Exiting.")
         sys.exit(1)
     
-# --- Start Minecraft ---
+# Launch Minecraft
 def start_minecraft():
     """Starts the Minecraft Launcher with the portable data directory."""
     print("\n## ▶️ Starting Minecraft Launcher...")
     
-    # Arguments to force the launcher to use our portable data directory
-    # Note: Path objects are converted to strings automatically in subprocess calls
     launcher_args = [
         "open", "-a", str(LAUNCHER_PATH), "--args",
         "--workDir", str(DATA_DIR),
@@ -247,12 +239,10 @@ def start_minecraft():
     ]
     
     try:
-        # Set the JAVA_HOME environment variable to our portable Java path.
         env = os.environ.copy()
         env['JAVA_HOME'] = str(JAVA_HOME)
         env['PATH'] = str(JAVA_EXE_PATH.parent) + os.pathsep + env.get('PATH', '')
 
-        # Use subprocess.Popen for non-blocking start (script exits while launcher runs)
         subprocess.Popen(launcher_args, env=env)
         
     except FileNotFoundError:
@@ -262,7 +252,7 @@ def start_minecraft():
         print(f"An error occurred while starting the launcher: {e}")
         sys.exit(1)
 
-# --- Main Execution ---
+# Main
 if __name__ == "__main__":
     check_and_install_launcher()
     check_and_install_java()

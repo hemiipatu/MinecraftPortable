@@ -2,24 +2,22 @@
 .SYNOPSIS
     Sets up and launches Minecraft in a portable manner.
 .DESCRIPTION
-    This script downloads the Minecraft Launcher and a modern, open-source
-    Java Development Kit (JDK), manages all files in local directories,
-    and forces the Minecraft Launcher to store all game data in the local '.\data' folder.
+    Downloads the Minecraft Launcher and Adoptium JDK, and stores launcher and game data
+    beneath the script directory.
 .NOTES
-    Uses Adoptium (Eclipse Temurin) for the Java runtime for licensing stability.
+    The Adoptium endpoint selects the latest patch for the configured LTS feature release.
 #>
 [CmdletBinding()]
 param()
 
-# --- Configuration & Paths ---
+# Configuration
 
-# Adoptium's current latest LTS feature release; the endpoint selects its latest patch.
+# Select the LTS feature release; Adoptium returns its latest patch.
 $JavaVersion = "25"
-# Adoptium API for reliable, open-source JDK download
 $LauncherUrl = "https://launcher.mojang.com/download/Minecraft.exe"
 $JavaApiUrl = "https://api.adoptium.net/v3/binary/latest/$($JavaVersion)/ga/windows/x64/jdk/hotspot/normal/eclipse?project=jdk"
 
-# Define Paths using $PSScriptRoot for reliability
+# Paths
 $locationroot = $PSScriptRoot
 $bindir = Join-Path $locationroot "bin"
 $runtimepath = Join-Path $bindir "runtime"
@@ -29,7 +27,7 @@ $javaHome = Join-Path $runtimepath "temurin-$JavaVersion"
 $javaExePath = Join-Path $javaHome "bin\java.exe"
 $javaZipPath = Join-Path $runtimepath "temurin-$JavaVersion.zip"
 
-# --- Functions ---
+# Helpers
 
 function New-Directory {
     param(
@@ -71,15 +69,14 @@ function Download-And-Verify {
     }
 }
 
-# --- Main Script Execution ---
+# Main
 
-# 1. Setup Directories
 Write-Host "Setting up required directories..." -ForegroundColor Cyan
 New-Directory -Path $bindir
 New-Directory -Path $runtimepath
 New-Directory -Path $datadir
 
-# 2. Check and Install Launcher
+# Download and install launcher.
 Write-Host "`nChecking for Minecraft Launcher..." -ForegroundColor Cyan
 if (-not (Test-Path $launcherpath)) {
     if (-not (Download-And-Verify -Uri $LauncherUrl -OutputFile $launcherpath -Description "Minecraft Launcher")) {
@@ -90,19 +87,17 @@ if (-not (Test-Path $launcherpath)) {
     Write-Host "Minecraft Launcher found." -ForegroundColor Green
 }
 
-# 3. Check and Install Java Runtime (JRE)
+# Download and install Java runtime.
 Write-Host "`nChecking for Java runtime..." -ForegroundColor Cyan
 
 if (-not (Test-Path $javaExePath -PathType Leaf)) {
     Write-Host "Java runtime not found. Downloading and unzipping..." -ForegroundColor Yellow
 
-    # Download the latest patch of the current LTS JDK.
     if (-not (Download-And-Verify -Uri $JavaApiUrl -OutputFile $javaZipPath -Description "Java Runtime")) {
         Write-Host "Setup failed. Exiting." -ForegroundColor Red
         exit 1
     }
 
-    # Unzip Java JRE
     Write-Host "Unzipping Java..." -ForegroundColor Yellow
     $extractPath = Join-Path $runtimepath "temurin-$JavaVersion-extract"
     try {
@@ -137,12 +132,11 @@ if (Test-Path $javaExePath -PathType Leaf) {
     exit 1
 }
 
-# 4. Start Minecraft
+# Launch Minecraft.
 Write-Host "`nStarting Minecraft Launcher..." -ForegroundColor Green
 $env:JAVA_HOME = $javaHome
 $env:PATH = "$(Join-Path $javaHome 'bin');$env:PATH"
 
-# Pass arguments to the launcher
 $Arguments = @(
     "--workDir", "`"$datadir`"",
     "--lockDir", "`"$datadir\.minecraft`""
