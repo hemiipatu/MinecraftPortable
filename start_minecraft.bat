@@ -22,6 +22,7 @@ set "bindir=%locationroot%\bin"
 set "runtimepath=%bindir%\runtime"
 set "launcherpath=%bindir%\MinecraftLauncher.exe"
 set "java_home=%runtimepath%\temurin-%java_lts%"
+set "java_extract_path=%runtimepath%\temurin-%java_lts%-extract"
 set "java_zip_path=%runtimepath%\temurin-%java_lts%.zip"
 set "java_exe_path=%java_home%\bin\java.exe"
 set "datadir=%locationroot%\data"
@@ -66,11 +67,29 @@ IF NOT exist "%java_exe_path%" (
     
     :: Unzip Java
     echo Unzipping Java...
-    IF NOT exist "%java_home%" mkdir "%java_home%"
-    "%tar%" -xf "%java_zip_path%" -C "%java_home%" --strip-components 1
+    IF exist "%java_extract_path%" rmdir /s /q "%java_extract_path%"
+    mkdir "%java_extract_path%"
+    "%tar%" -xf "%java_zip_path%" -C "%java_extract_path%" --strip-components 1
     IF errorlevel 1 (
+        rmdir /s /q "%java_extract_path%" 2>nul
         del "%java_zip_path%" 2>nul
         echo ERROR: Failed to extract Java Runtime. Exiting.
+        pause
+        exit /b 1
+    )
+
+    IF NOT exist "%java_extract_path%\bin\java.exe" (
+        rmdir /s /q "%java_extract_path%" 2>nul
+        del "%java_zip_path%" 2>nul
+        echo ERROR: Failed to verify Java Runtime. Exiting.
+        pause
+        exit /b 1
+    )
+    IF exist "%java_home%" rmdir /s /q "%java_home%"
+    move "%java_extract_path%" "%java_home%" >nul
+    IF errorlevel 1 (
+        del "%java_zip_path%" 2>nul
+        echo ERROR: Failed to install Java Runtime. Exiting.
         pause
         exit /b 1
     )

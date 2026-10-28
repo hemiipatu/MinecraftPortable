@@ -99,6 +99,38 @@ def download_file(url: str, destination: Path, headers=None) -> bool:
     finally:
         temporary_path.unlink(missing_ok=True)
 
+
+def safe_extract_zip(archive_path: Path, destination: Path) -> None:
+    root = destination.resolve()
+    with zipfile.ZipFile(archive_path, 'r') as archive:
+        for member in archive.infolist():
+            target = (root / member.filename).resolve()
+            try:
+                within_root = os.path.commonpath((str(root), str(target))) == str(root)
+            except ValueError:
+                within_root = False
+            if not within_root:
+                raise RuntimeError(f"Unsafe ZIP member path: {member.filename}")
+        archive.extractall(destination)
+
+
+def safe_extract_tar(archive_path: Path, destination: Path) -> None:
+    with tarfile.open(archive_path, 'r:gz') as archive:
+        if hasattr(tarfile, "data_filter"):
+            archive.extractall(destination, filter="data")
+            return
+
+        root = destination.resolve()
+        for member in archive.getmembers():
+            target = (root / member.name).resolve()
+            try:
+                within_root = os.path.commonpath((str(root), str(target))) == str(root)
+            except ValueError:
+                within_root = False
+            if not within_root or member.issym() or member.islnk():
+                raise RuntimeError(f"Unsafe TAR member: {member.name}")
+        archive.extractall(destination)
+
 # --- Core Functions ---
 def check_and_install_launcher():
     """Checks for, downloads, and prepares the Minecraft Launcher."""
@@ -133,9 +165,7 @@ def check_and_install_launcher():
         # Extract Linux Tarball
         print("Extracting Linux launcher...")
         try:
-            with tarfile.open(LAUNCHER_DOWNLOAD_FILE, 'r:gz') as tar_ref:
-                # Extract to BIN_DIR
-                tar_ref.extractall(BIN_DIR)
+            safe_extract_tar(LAUNCHER_DOWNLOAD_FILE, BIN_DIR)
             
             LAUNCHER_DOWNLOAD_FILE.unlink() # Delete the archive file
             LAUNCHER_PATH.chmod(0o755) # Ensure the executable is runnable
@@ -157,9 +187,7 @@ def check_and_install_java():
         
     print("Java runtime not found. Downloading and extracting...")
 
-    # Oracle requires a specific cookie to accept license (Header for archive downloads)
-    oracle_headers = {"Cookie": "oraclelicense=accept-securebackup-cookie"}
-    if not download_file(JAVA_URL, JAVA_ARCHIVE_PATH, headers=oracle_headers):
+    if not download_file(JAVA_URL, JAVA_ARCHIVE_PATH):
         sys.exit(1)
             
     # Extract Java
@@ -171,11 +199,9 @@ def check_and_install_java():
         extract_path.mkdir(parents=True)
 
         if JAVA_ARCHIVE_EXT == "zip":
-            with zipfile.ZipFile(JAVA_ARCHIVE_PATH, 'r') as zip_ref:
-                zip_ref.extractall(extract_path)
+            safe_extract_zip(JAVA_ARCHIVE_PATH, extract_path)
         else: # tar.gz (Mac/Linux)
-            with tarfile.open(JAVA_ARCHIVE_PATH, 'r:gz') as tar_ref:
-                tar_ref.extractall(extract_path)
+            safe_extract_tar(JAVA_ARCHIVE_PATH, extract_path)
 
         extracted_root = next((path for path in extract_path.iterdir() if path.is_dir()), None)
         if extracted_root is None:

@@ -8,6 +8,7 @@ JAVA_LTS_VERSION="25"
 # Use the script location as the root directory for portability
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 JAVA_HOME="${ROOT_DIR}/bin/runtime/temurin-${JAVA_LTS_VERSION}"
+JAVA_EXTRACT_PATH="${ROOT_DIR}/bin/runtime/temurin-${JAVA_LTS_VERSION}-extract"
 DATA_DIR="${ROOT_DIR}/data"
 
 # Adoptium Download URL (Direct link to the archive without redirects is faster)
@@ -26,16 +27,20 @@ create_dirs() {
 download_and_extract_java() {
     echo "Java Runtime not found. Downloading the latest Adoptium LTS (Java ${JAVA_LTS_VERSION})..."
 
-    # Extract the archive contents into the versioned Java home directory.
-    mkdir -p "${JAVA_HOME}"
-    if ! curl -fsSL "${JAVA_URL_BASE}" | tar -xz -C "${JAVA_HOME}" --strip-components=1; then
+    rm -rf "${JAVA_EXTRACT_PATH}"
+    mkdir -p "${JAVA_EXTRACT_PATH}"
+    if ! curl -fsSL "${JAVA_URL_BASE}" | tar -xz -C "${JAVA_EXTRACT_PATH}" --strip-components=1; then
+        rm -rf "${JAVA_EXTRACT_PATH}"
         echo "ERROR: Failed to download and extract Java. Check network connection and URL."
         exit 1
     fi
-    if [ ! -f "${JAVA_HOME_BIN}" ]; then
+    if [ ! -f "${JAVA_EXTRACT_PATH}/bin/java" ]; then
+        rm -rf "${JAVA_EXTRACT_PATH}"
         echo "ERROR: Java extraction completed, but java was not found."
         exit 1
     fi
+    rm -rf "${JAVA_HOME}"
+    mv "${JAVA_EXTRACT_PATH}" "${JAVA_HOME}"
     echo "Java Runtime extracted to ${JAVA_HOME}."
 }
 
