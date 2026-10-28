@@ -13,8 +13,8 @@ param()
 
 # --- Configuration & Paths ---
 
-# Use modern, stable Java 21 LTS (Long-Term Support)
-$JavaVersion = "21"
+# Adoptium's current latest LTS feature release; the endpoint selects its latest patch.
+$JavaVersion = "25"
 # Adoptium API for reliable, open-source JDK download
 $LauncherUrl = "https://launcher.mojang.com/download/Minecraft.exe"
 $JavaApiUrl = "https://api.adoptium.net/v3/binary/latest/$($JavaVersion)/ga/windows/x64/jdk/hotspot/normal/eclipse?project=jdk"
@@ -25,7 +25,9 @@ $bindir = Join-Path $locationroot "bin"
 $runtimepath = Join-Path $bindir "runtime"
 $datadir = Join-Path $locationroot "data"
 $launcherpath = Join-Path $bindir "MinecraftLauncher.exe"
-$javaZipPath = Join-Path $runtimepath "java_runtime.zip"
+$javaHome = Join-Path $runtimepath "temurin-$JavaVersion"
+$javaExePath = Join-Path $javaHome "bin\java.exe"
+$javaZipPath = Join-Path $runtimepath "temurin-$JavaVersion.zip"
 
 # --- Functions ---
 
@@ -91,13 +93,10 @@ if (-not (Test-Path $launcherpath)) {
 # 3. Check and Install Java Runtime (JRE)
 Write-Host "`nChecking for Java runtime..." -ForegroundColor Cyan
 
-# Robust check: look for any 'java.exe' recursively inside the runtime folder.
-$JavaExe = Get-ChildItem -Path $runtimepath -Filter 'java.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-
-if (-not $JavaExe) {
+if (-not (Test-Path $javaExePath -PathType Leaf)) {
     Write-Host "Java runtime not found. Downloading and unzipping..." -ForegroundColor Yellow
 
-    # Download Java JRE
+    # Download the latest patch of the current LTS JDK.
     if (-not (Download-And-Verify -Uri $JavaApiUrl -OutputFile $javaZipPath -Description "Java Runtime")) {
         Write-Host "Setup failed. Exiting." -ForegroundColor Red
         exit 1
@@ -105,33 +104,43 @@ if (-not $JavaExe) {
 
     # Unzip Java JRE
     Write-Host "Unzipping Java..." -ForegroundColor Yellow
+    $extractPath = Join-Path $runtimepath "temurin-$JavaVersion-extract"
     try {
-        # Extract the ZIP directly into the runtime folder.
-        Expand-Archive -Path $javaZipPath -DestinationPath $runtimepath -Force
+        Remove-Item $extractPath -Recurse -Force -ErrorAction SilentlyContinue
+        New-Directory -Path $extractPath
+        Expand-Archive -Path $javaZipPath -DestinationPath $extractPath -Force
 
-        # Clean up zip file
-        Remove-Item $javaZipPath -Force -ErrorAction SilentlyContinue
-
-        # Final check for the executable path after extraction
-        $JavaExe = Get-ChildItem -Path $runtimepath -Filter 'java.exe' -Recurse | Select-Object -First 1
-        if (-not $JavaExe) {
-            throw "Failed to find java.exe after extraction."
+        $extractedJavaExe = Get-ChildItem -Path $extractPath -Filter 'java.exe' -Recurse | Select-Object -First 1
+        if (-not $extractedJavaExe) {
+            throw "Failed to find java.exe in the downloaded archive."
         }
+        $extractedJavaHome = $extractedJavaExe.Directory.Parent.FullName
+        Remove-Item $javaHome -Recurse -Force -ErrorAction SilentlyContinue
+        Move-Item $extractedJavaHome $javaHome
         Write-Host "Java extraction successful." -ForegroundColor Green
+
+        Remove-Item $javaZipPath -Force -ErrorAction SilentlyContinue
+        Remove-Item $extractPath -Recurse -Force -ErrorAction SilentlyContinue
     }
     catch {
+        Remove-Item $extractPath -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item $javaZipPath -Force -ErrorAction SilentlyContinue
         Write-Error "Failed to extract Java Runtime. Details: $($_.Exception.Message)"
         exit 1
     }
-} else {
+}
+
+if (Test-Path $javaExePath -PathType Leaf) {
     Write-Host "Java runtime found." -ForegroundColor Green
+} else {
+    Write-Error "Java runtime was not found at $javaExePath."
+    exit 1
 }
 
 # 4. Start Minecraft
 Write-Host "`nStarting Minecraft Launcher..." -ForegroundColor Green
-$JavaExePath = $JavaExe.Directory.Parent.FullName # Get the path to the root Java folder (e.g., C:\...\jdk-21.0.1)
-$env:JAVA_HOME = $JavaExePath
-$env:PATH = "$($JavaExe.Directory.FullName);$env:PATH"
+$env:JAVA_HOME = $javaHome
+$env:PATH = "$(Join-Path $javaHome 'bin');$env:PATH"
 
 # Pass arguments to the launcher
 $Arguments = @(

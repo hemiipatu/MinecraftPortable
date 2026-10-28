@@ -14,13 +14,13 @@ MinecraftPortable is a script which allows the official Minecraft client to be r
 ## Where and how are the game files saved
 The script creates the following directories on Windows:
  - **_bin_** | Used to store _MinecraftLauncher.exe_ and is later used by the launcher itself.
- - **_bin\runtime_** | Used to store JavaJDK/JRE.
+ - **_bin\runtime_** | Used to store the Adoptium Java 25 LTS JDK.
  - **_cache_** | Used by the launcher itself to cache game files - remains unused until first launch.
  - **_data_** | Used to store game data, containing what would otherwise be found in .minecraft.
 
-The script will use the above directories to download and store:
+The Windows launchers download and store:
  - **_Minecraft.exe_** | The official minecraft.exe downloaded from its' respective site.
- - **_Java.zip_** | The official Java.zip downloaded from its' respective site which is unpacked using tar.
+ - **_temurin-25.zip_** | The Adoptium Java 25 LTS archive, unpacked into _bin\runtime\temurin-25_.
 
 On Linux, `start_minecraft.sh` uses the system-installed `minecraft-launcher` command, while `start_minecraft.py` downloads the launcher into `bin`. Both store game data in `data`.
   

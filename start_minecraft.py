@@ -2,6 +2,7 @@ import os
 import sys
 import platform
 import subprocess
+import shutil
 import zipfile
 import tarfile
 from pathlib import Path
@@ -13,8 +14,7 @@ except ImportError:
     requests = None
 
 # --- Configuration ---
-VERL_JAVA = "jdk-19.0.2"
-VERS_JAVA = "19"
+JAVA_LTS_VERSION = "25"
 
 # Official Download Links
 LAUNCHER_URL_WIN = "https://launcher.mojang.com/download/Minecraft.exe"
@@ -52,20 +52,20 @@ else: # Linux
 # --- Java Setup ---
 if SYSTEM == "Windows":
     JAVA_ARCHIVE_EXT = "zip"
-    JAVA_ARCHIVE_OS = "windows-x64"
+    JAVA_API_OS = "windows"
     JAVA_EXE_SUFFIX = "java.exe"
 elif SYSTEM == "Darwin":
     JAVA_ARCHIVE_EXT = "tar.gz"
-    JAVA_ARCHIVE_OS = "macos-x64"
+    JAVA_API_OS = "mac"
     JAVA_EXE_SUFFIX = "java"
 else: # Linux
     JAVA_ARCHIVE_EXT = "tar.gz"
-    JAVA_ARCHIVE_OS = "linux-x64"
+    JAVA_API_OS = "linux"
     JAVA_EXE_SUFFIX = "java"
 
-JAVA_URL = f"https://download.oracle.com/java/{VERS_JAVA}/archive/{VERL_JAVA}_{JAVA_ARCHIVE_OS}_bin.{JAVA_ARCHIVE_EXT}"
-JAVA_ARCHIVE_PATH = RUNTIME_PATH / f"{VERL_JAVA}.{JAVA_ARCHIVE_EXT}"
-JAVA_DIR = RUNTIME_PATH / (f"{VERL_JAVA}.jdk" if SYSTEM == "Darwin" else VERL_JAVA)
+JAVA_URL = f"https://api.adoptium.net/v3/binary/latest/{JAVA_LTS_VERSION}/ga/{JAVA_API_OS}/x64/jdk/hotspot/normal/eclipse?project=jdk"
+JAVA_ARCHIVE_PATH = RUNTIME_PATH / f"temurin-{JAVA_LTS_VERSION}.{JAVA_ARCHIVE_EXT}"
+JAVA_DIR = RUNTIME_PATH / f"temurin-{JAVA_LTS_VERSION}"
 JAVA_HOME = JAVA_DIR / "Contents" / "Home" if SYSTEM == "Darwin" else JAVA_DIR
 JAVA_EXE_PATH = JAVA_HOME / "bin" / JAVA_EXE_SUFFIX
 
@@ -163,22 +163,41 @@ def check_and_install_java():
         sys.exit(1)
             
     # Extract Java
-    print(f"Extracting Java {JAVA_ARCHIVE_EXT}...")
+    print(f"Extracting Adoptium LTS {JAVA_LTS_VERSION} JDK...")
+    extract_path = RUNTIME_PATH / f"temurin-{JAVA_LTS_VERSION}-extract"
     try:
-        # Extract the archive into the runtime directory.
+        if extract_path.exists():
+            shutil.rmtree(extract_path)
+        extract_path.mkdir(parents=True)
+
         if JAVA_ARCHIVE_EXT == "zip":
             with zipfile.ZipFile(JAVA_ARCHIVE_PATH, 'r') as zip_ref:
-                # Extract all contents
-                zip_ref.extractall(RUNTIME_PATH)
+                zip_ref.extractall(extract_path)
         else: # tar.gz (Mac/Linux)
             with tarfile.open(JAVA_ARCHIVE_PATH, 'r:gz') as tar_ref:
-                tar_ref.extractall(RUNTIME_PATH)
+                tar_ref.extractall(extract_path)
+
+        extracted_root = next((path for path in extract_path.iterdir() if path.is_dir()), None)
+        if extracted_root is None:
+            raise RuntimeError("The JDK archive did not contain a top-level directory.")
+
+        extracted_java = extracted_root / "Contents" / "Home" / "bin" / JAVA_EXE_SUFFIX if SYSTEM == "Darwin" else extracted_root / "bin" / JAVA_EXE_SUFFIX
+        if not extracted_java.is_file():
+            raise RuntimeError(f"Java executable not found in extracted archive: {extracted_java}")
+
+        if JAVA_DIR.exists():
+            shutil.rmtree(JAVA_DIR)
+        extracted_root.replace(JAVA_DIR)
         
         JAVA_ARCHIVE_PATH.unlink() # Delete the archive file
         
     except Exception as e:
+        shutil.rmtree(extract_path, ignore_errors=True)
         print(f"ERROR: Failed to extract Java Runtime. Error: {e}")
         sys.exit(1)
+    finally:
+        JAVA_ARCHIVE_PATH.unlink(missing_ok=True)
+        shutil.rmtree(extract_path, ignore_errors=True)
         
     if not JAVA_EXE_PATH.exists():
         print("ERROR: Failed to verify extracted Java Runtime. Exiting.")

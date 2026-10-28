@@ -8,10 +8,9 @@ color 02
 :: Revision/Commit History: https://github.com/hemiipatu/MinecraftPortable/commits/master
 
 :: --- Configuration ---
-set "verljava=jdk-19.0.2"
-set "versjava=19"
+set "java_lts=25"
 set "launcher_url=https://launcher.mojang.com/download/Minecraft.exe"
-set "java_url=https://download.oracle.com/java/%versjava%/archive/%verljava%_windows-x64_bin.zip"
+set "java_url=https://api.adoptium.net/v3/binary/latest/%java_lts%/ga/windows/x64/jdk/hotspot/normal/eclipse?project=jdk"
 
 :: Get the directory of the script and define root paths
 :: %~dp0 is the drive and path, the / separator is usually included.
@@ -22,8 +21,9 @@ IF "%locationroot:~-1%" == "\" (
 set "bindir=%locationroot%\bin"
 set "runtimepath=%bindir%\runtime"
 set "launcherpath=%bindir%\MinecraftLauncher.exe"
-set "java_zip_path=%runtimepath%\%verljava%.zip"
-set "java_exe_path=%runtimepath%\%verljava%\bin\java.exe"
+set "java_home=%runtimepath%\temurin-%java_lts%"
+set "java_zip_path=%runtimepath%\temurin-%java_lts%.zip"
+set "java_exe_path=%java_home%\bin\java.exe"
 set "datadir=%locationroot%\data"
 
 :: --- System Tools ---
@@ -56,7 +56,7 @@ IF NOT exist "%java_exe_path%" (
     echo Java runtime not found. Downloading and unzipping...
     
     :: Download Java
-    "%curl%" --fail --location --silent --show-error -H "Cookie: oraclelicense=accept-securebackup-cookie" "%java_url%" -o "%java_zip_path%"
+    "%curl%" --fail --location --silent --show-error "%java_url%" -o "%java_zip_path%"
     IF errorlevel 1 (
         del "%java_zip_path%" 2>nul
         echo ERROR: Failed to download Java Runtime. Exiting.
@@ -66,8 +66,8 @@ IF NOT exist "%java_exe_path%" (
     
     :: Unzip Java
     echo Unzipping Java...
-    :: -C extracts to a directory, and the file contents will create the %verljava% folder inside
-    "%tar%" -xvf "%java_zip_path%" -C "%runtimepath%"
+    IF NOT exist "%java_home%" mkdir "%java_home%"
+    "%tar%" -xf "%java_zip_path%" -C "%java_home%" --strip-components 1
     IF errorlevel 1 (
         del "%java_zip_path%" 2>nul
         echo ERROR: Failed to extract Java Runtime. Exiting.
@@ -87,7 +87,7 @@ IF NOT exist "%java_exe_path%" (
 
 :: --- Start Minecraft ---
 echo Starting Minecraft Launcher...
-set "JAVA_HOME=%runtimepath%\%verljava%"
+set "JAVA_HOME=%java_home%"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
 start "" "%launcherpath%" --workDir "%datadir%" --lockDir "%datadir%\.minecraft"
 

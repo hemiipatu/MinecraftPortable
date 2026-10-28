@@ -4,15 +4,14 @@
 set -eo pipefail
 
 # --- Configuration ---
-JAVA_VERS="19"
-JAVA_VERL="jdk-19.0.2"
+JAVA_LTS_VERSION="25"
 # Use the script location as the root directory for portability
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-JAVA_HOME="${ROOT_DIR}/bin/runtime/${JAVA_VERL}"
+JAVA_HOME="${ROOT_DIR}/bin/runtime/temurin-${JAVA_LTS_VERSION}"
 DATA_DIR="${ROOT_DIR}/data"
 
 # Adoptium Download URL (Direct link to the archive without redirects is faster)
-JAVA_URL_BASE="https://api.adoptium.net/v3/binary/latest/${JAVA_VERS}/ga/linux/x64/jdk/hotspot/normal/eclipse"
+JAVA_URL_BASE="https://api.adoptium.net/v3/binary/latest/${JAVA_LTS_VERSION}/ga/linux/x64/jdk/hotspot/normal/eclipse?project=jdk"
 JAVA_HOME_BIN="${JAVA_HOME}/bin/java"
 
 # --- Functions ---
@@ -25,7 +24,7 @@ create_dirs() {
 
 # Optimized Java Download and Extraction
 download_and_extract_java() {
-    echo "Java Runtime not found. Downloading JDK ${JAVA_VERL}..."
+    echo "Java Runtime not found. Downloading the latest Adoptium LTS (Java ${JAVA_LTS_VERSION})..."
 
     # Extract the archive contents into the versioned Java home directory.
     mkdir -p "${JAVA_HOME}"
