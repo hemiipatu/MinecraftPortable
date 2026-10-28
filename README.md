@@ -22,8 +22,7 @@ The script will use the above directories to download and store:
  - **_Minecraft.exe_** | The official minecraft.exe downloaded from its' respective site.
  - **_Java.zip_** | The official Java.zip downloaded from its' respective site which is unpacked using tar.
 
-The script creates the following directories on Linux:
- - **_Nothing_** | Functionality for Linux is not present and therefor will do nothing.
+On Linux, `start_minecraft.sh` uses the system-installed `minecraft-launcher` command, while `start_minecraft.py` downloads the launcher into `bin`. Both store game data in `data`.
   
 ## How to install
  - [Instructions for Windows](https://github.com/hemiipatu/MinecraftPortable/wiki/Installation-on-Windows-10.)

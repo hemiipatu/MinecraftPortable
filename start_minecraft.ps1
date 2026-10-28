@@ -47,15 +47,23 @@ function Download-And-Verify {
     )
     Write-Host "Downloading $($Description)..." -ForegroundColor Yellow
     try {
-        # Use simple Get-Method for a clean download (aliased to iwr)
-        Invoke-WebRequest -Uri $Uri -OutFile $OutputFile -MaximumRedirection 5 -UseBasicParsing
-        if (-not (Test-Path $OutputFile)) {
-            throw "Download failed: File not found at $($OutputFile)."
+        $curlPath = Join-Path $env:SystemRoot "System32\curl.exe"
+        if (-not (Test-Path $curlPath -PathType Leaf)) {
+            throw "curl.exe was not found at $curlPath."
+        }
+
+        & $curlPath --fail --location --silent --show-error --output $OutputFile $Uri
+        if ($LASTEXITCODE -ne 0) {
+            throw "curl.exe exited with code $LASTEXITCODE."
+        }
+        if (-not (Test-Path $OutputFile -PathType Leaf) -or (Get-Item $OutputFile).Length -eq 0) {
+            throw "Download failed: File is missing or empty at $($OutputFile)."
         }
         Write-Host "Download successful: $($Description)" -ForegroundColor Green
         return $true
     }
     catch {
+        Remove-Item $OutputFile -Force -ErrorAction SilentlyContinue
         Write-Error "Failed to download $($Description). Details: $($_.Exception.Message)"
         return $false
     }
@@ -122,13 +130,13 @@ if (-not $JavaExe) {
 # 4. Start Minecraft
 Write-Host "`nStarting Minecraft Launcher..." -ForegroundColor Green
 $JavaExePath = $JavaExe.Directory.Parent.FullName # Get the path to the root Java folder (e.g., C:\...\jdk-21.0.1)
+$env:JAVA_HOME = $JavaExePath
+$env:PATH = "$($JavaExe.Directory.FullName);$env:PATH"
 
 # Pass arguments to the launcher
 $Arguments = @(
     "--workDir", "`"$datadir`"",
-    "--lockDir", "`"$datadir\.minecraft`"",
-    # OPTIONAL: Set the environment variable for the launcher to find the local Java
-    "-Djava.home=`"$JavaExePath`""
+    "--lockDir", "`"$datadir\.minecraft`""
 )
 
 Start-Process -FilePath $launcherpath -ArgumentList $Arguments -NoNewWindow

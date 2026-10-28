@@ -2,7 +2,6 @@ import os
 import sys
 import platform
 import subprocess
-import shutil
 import zipfile
 import tarfile
 from pathlib import Path
@@ -11,8 +10,7 @@ from pathlib import Path
 try:
     import requests
 except ImportError:
-    print("ERROR: The 'requests' library is required. Please install it with: pip install requests")
-    sys.exit(1)
+    requests = None
 
 # --- Configuration ---
 VERL_JAVA = "jdk-19.0.2"
@@ -67,21 +65,30 @@ else: # Linux
 
 JAVA_URL = f"https://download.oracle.com/java/{VERS_JAVA}/archive/{VERL_JAVA}_{JAVA_ARCHIVE_OS}_bin.{JAVA_ARCHIVE_EXT}"
 JAVA_ARCHIVE_PATH = RUNTIME_PATH / f"{VERL_JAVA}.{JAVA_ARCHIVE_EXT}"
-JAVA_DIR = RUNTIME_PATH / VERL_JAVA
-JAVA_EXE_PATH = JAVA_DIR / "bin" / JAVA_EXE_SUFFIX
+JAVA_DIR = RUNTIME_PATH / (f"{VERL_JAVA}.jdk" if SYSTEM == "Darwin" else VERL_JAVA)
+JAVA_HOME = JAVA_DIR / "Contents" / "Home" if SYSTEM == "Darwin" else JAVA_DIR
+JAVA_EXE_PATH = JAVA_HOME / "bin" / JAVA_EXE_SUFFIX
 
 # --- Optimized Helper Function ---
-def download_file(url: str, destination: Path, headers: dict = {}) -> bool:
+def download_file(url: str, destination: Path, headers=None) -> bool:
     """Optimized download using requests, streaming to handle large files efficiently."""
+    if requests is None:
+        print("ERROR: Downloading requires the 'requests' package. Install it with: pip install requests")
+        return False
+
     filename = destination.name
+    temporary_path = destination.with_name(f"{destination.name}.part")
     print(f"Downloading {filename}...")
     try:
-        # Stream the download to save memory, especially for the large Java archive
-        with requests.get(url, headers=headers, stream=True, timeout=30) as r:
+        with requests.get(url, headers=headers or {}, stream=True, timeout=30) as r:
             r.raise_for_status() # Raise exception for bad status codes (4xx or 5xx)
-            with open(destination, 'wb') as f:
-                # Use shutil.copyfileobj for efficient stream copying
-                shutil.copyfileobj(r.raw, f)
+            with open(temporary_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+        if temporary_path.stat().st_size == 0:
+            raise ValueError("The server returned an empty file.")
+        os.replace(temporary_path, destination)
         return True
     except requests.exceptions.RequestException as e:
         print(f"ERROR: Failed to download {filename}. Error: {e}")
@@ -89,6 +96,8 @@ def download_file(url: str, destination: Path, headers: dict = {}) -> bool:
     except Exception as e:
         print(f"ERROR: An unexpected error occurred during download: {e}")
         return False
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
 # --- Core Functions ---
 def check_and_install_launcher():
@@ -156,11 +165,9 @@ def check_and_install_java():
     # Extract Java
     print(f"Extracting Java {JAVA_ARCHIVE_EXT}...")
     try:
-        # Determine the root folder created by the archive and extract contents to RUNTIME_PATH
+        # Extract the archive into the runtime directory.
         if JAVA_ARCHIVE_EXT == "zip":
             with zipfile.ZipFile(JAVA_ARCHIVE_PATH, 'r') as zip_ref:
-                # Optimized extraction: find the single top-level directory name
-                top_dir = zip_ref.namelist()[0].split('/')[0]
                 # Extract all contents
                 zip_ref.extractall(RUNTIME_PATH)
         else: # tar.gz (Mac/Linux)
@@ -185,15 +192,20 @@ def start_minecraft():
     # Arguments to force the launcher to use our portable data directory
     # Note: Path objects are converted to strings automatically in subprocess calls
     launcher_args = [
+        "open", "-a", str(LAUNCHER_PATH), "--args",
+        "--workDir", str(DATA_DIR),
+        "--lockDir", str(DATA_DIR / ".minecraft")
+    ] if SYSTEM == "Darwin" else [
         str(LAUNCHER_PATH),
-        "--workDir", str(DATA_DIR), 
+        "--workDir", str(DATA_DIR),
         "--lockDir", str(DATA_DIR / ".minecraft")
     ]
     
     try:
         # Set the JAVA_HOME environment variable to our portable Java path.
         env = os.environ.copy()
-        env['JAVA_HOME'] = str(JAVA_DIR)
+        env['JAVA_HOME'] = str(JAVA_HOME)
+        env['PATH'] = str(JAVA_EXE_PATH.parent) + os.pathsep + env.get('PATH', '')
 
         # Use subprocess.Popen for non-blocking start (script exits while launcher runs)
         subprocess.Popen(launcher_args, env=env)

@@ -41,6 +41,11 @@ download_and_extract_java() {
 }
 
 check_and_start() {
+    if ! command -v minecraft-launcher >/dev/null 2>&1; then
+        echo "ERROR: The 'minecraft-launcher' command was not found in PATH. Install it before running this script."
+        return 1
+    fi
+
     # 1. Check/Install Java
     if [ ! -f "${JAVA_HOME_BIN}" ]; then
         download_and_extract_java
@@ -48,15 +53,11 @@ check_and_start() {
         echo "Java Runtime found."
     fi
     
-    # 2. Check Launcher (Informational warning, as we rely on system install)
-    if ! command -v minecraft-launcher &> /dev/null; then
-        echo "WARNING: The 'minecraft-launcher' command was not found in PATH. Ensure it's installed."
-    fi
-
     echo "Starting Minecraft Launcher in portable mode (WorkDir: ${DATA_DIR})..."
     
     # Set the JAVA_HOME environment variable for the launcher
     export JAVA_HOME="${JAVA_HOME}"
+    export PATH="${JAVA_HOME}/bin:${PATH}"
     
     # Run the system-installed launcher in the background (&)
     minecraft-launcher "--workDir" "${DATA_DIR}" &

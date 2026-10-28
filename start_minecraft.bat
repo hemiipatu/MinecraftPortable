@@ -87,6 +87,8 @@ IF NOT exist "%java_exe_path%" (
 
 :: --- Start Minecraft ---
 echo Starting Minecraft Launcher...
+set "JAVA_HOME=%runtimepath%\%verljava%"
+set "PATH=%JAVA_HOME%\bin;%PATH%"
 start "" "%launcherpath%" --workDir "%datadir%" --lockDir "%datadir%\.minecraft"
 
 :: --- End Script ---
