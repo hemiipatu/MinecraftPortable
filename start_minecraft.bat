@@ -32,19 +32,18 @@ set "curl=%systemroot%\system32\curl.exe"
 set "tar=%systemroot%\system32\tar.exe"
 
 :: --- Check and Install Launcher ---
+IF NOT exist "%bindir%" mkdir "%bindir%"
+IF NOT exist "%runtimepath%" mkdir "%runtimepath%"
+IF NOT exist "%datadir%" mkdir "%datadir%"
+
 echo Checking for Minecraft Launcher...
 IF NOT exist "%launcherpath%" (
-    echo Launcher not found. Creating directories and downloading...
-    
-    :: Use 'if not exist' to prevent errors if dir is already made
-    IF NOT exist "%bindir%" mkdir "%bindir%"
-    IF NOT exist "%runtimepath%" mkdir "%runtimepath%"
-    IF NOT exist "%datadir%" mkdir "%datadir%"
-    
+    echo Launcher not found. Downloading...
+
     :: Download Launcher
-    "%curl%" "%launcher_url%" -o "%launcherpath%"
-    
-    IF NOT exist "%launcherpath%" (
+    "%curl%" --fail --location --silent --show-error "%launcher_url%" -o "%launcherpath%"
+    IF errorlevel 1 (
+        del "%launcherpath%" 2>nul
         echo ERROR: Failed to download Minecraft Launcher. Exiting.
         pause
         exit /b 1
@@ -57,9 +56,9 @@ IF NOT exist "%java_exe_path%" (
     echo Java runtime not found. Downloading and unzipping...
     
     :: Download Java
-    "%curl%" -H "Cookie: oraclelicense=accept-securebackup-cookie" "%java_url%" -o "%java_zip_path%"
-    
-    IF NOT exist "%java_zip_path%" (
+    "%curl%" --fail --location --silent --show-error -H "Cookie: oraclelicense=accept-securebackup-cookie" "%java_url%" -o "%java_zip_path%"
+    IF errorlevel 1 (
+        del "%java_zip_path%" 2>nul
         echo ERROR: Failed to download Java Runtime. Exiting.
         pause
         exit /b 1
@@ -69,6 +68,12 @@ IF NOT exist "%java_exe_path%" (
     echo Unzipping Java...
     :: -C extracts to a directory, and the file contents will create the %verljava% folder inside
     "%tar%" -xvf "%java_zip_path%" -C "%runtimepath%"
+    IF errorlevel 1 (
+        del "%java_zip_path%" 2>nul
+        echo ERROR: Failed to extract Java Runtime. Exiting.
+        pause
+        exit /b 1
+    )
     
     :: Clean up zip file
     del "%java_zip_path%"

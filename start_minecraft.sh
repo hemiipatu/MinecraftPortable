@@ -6,8 +6,8 @@ set -eo pipefail
 # --- Configuration ---
 JAVA_VERS="19"
 JAVA_VERL="jdk-19.0.2"
-# Set PWD as the root directory for portability
-ROOT_DIR="$(pwd)" 
+# Use the script location as the root directory for portability
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 JAVA_HOME="${ROOT_DIR}/bin/runtime/${JAVA_VERL}"
 DATA_DIR="${ROOT_DIR}/data"
 
@@ -27,27 +27,17 @@ create_dirs() {
 download_and_extract_java() {
     echo "Java Runtime not found. Downloading JDK ${JAVA_VERL}..."
 
-    # Use curl with a direct pipe to tar. This eliminates the need to save 
-    # the large .tar.gz archive to disk, significantly reducing I/O and time.
-    # Flags: -f (fail), -s (silent), -L (follow redirects)
-    if ! curl -fsSL "${JAVA_URL_BASE}" | tar -xz -C "${ROOT_DIR}/bin/runtime" --strip-components=1; then
+    # Extract the archive contents into the versioned Java home directory.
+    mkdir -p "${JAVA_HOME}"
+    if ! curl -fsSL "${JAVA_URL_BASE}" | tar -xz -C "${JAVA_HOME}" --strip-components=1; then
         echo "ERROR: Failed to download and extract Java. Check network connection and URL."
         exit 1
     fi
-    
-    # After extraction, rename the directory to the expected JAVA_VERL
-    # This assumes the extracted folder name is the first item in the runtime folder
-    local extracted_folder
-    # Find the newly extracted folder name (which will be the only other item)
-    extracted_folder=$(find "${ROOT_DIR}/bin/runtime" -maxdepth 1 -type d ! -name runtime -print -quit)
-
-    if [ -d "${extracted_folder}" ] && [ "${extracted_folder}" != "${JAVA_HOME}" ]; then
-        mv "${extracted_folder}" "${JAVA_HOME}"
-        echo "Java Runtime extracted and renamed to ${JAVA_VERL}."
-    else
-        echo "ERROR: Could not locate the newly extracted Java folder for renaming."
+    if [ ! -f "${JAVA_HOME_BIN}" ]; then
+        echo "ERROR: Java extraction completed, but java was not found."
         exit 1
     fi
+    echo "Java Runtime extracted to ${JAVA_HOME}."
 }
 
 check_and_start() {
