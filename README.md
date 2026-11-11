@@ -116,9 +116,7 @@
    python3 start_minecraft.py
    ```
 
-## 📖 How It Works
-
-### Architecture
+## 🏗️ Architecture Diagram
 
 ```
 User executes start script (PS1 / BAT / PY / SH)
@@ -138,7 +136,7 @@ Launches Minecraft with portable data path
 All game data stored in local /data directory
 ```
 
-### Directory Structure
+## 📁 Directory Structure
 
 After first run, the following structure is created:
 
@@ -165,34 +163,38 @@ MinecraftPortable/
 └── README.md
 ```
 
-### Key Components
+## 🔧 Components
 
-#### 1. **start_minecraft.ps1** - PowerShell Launcher
-- Platform: Windows (PowerShell 5.0+)
-- Downloads Minecraft Launcher to `bin/`
-- Downloads and extracts Adoptium Java 25 LTS
-- Launches game with `--workDir` pointing to portable `data/`
-- Best for: Windows users with PowerShell
+### 1. **start_minecraft.ps1** - PowerShell Launcher
+- **Platform:** Windows (PowerShell 5.0+)
+- **Features:**
+  - Downloads Minecraft Launcher to `bin/`
+  - Downloads and extracts Adoptium Java 25 LTS
+  - Launches game with `--workDir` pointing to portable `data/`
+- **Best for:** Windows users with PowerShell
 
-#### 2. **start_minecraft.bat** - Batch Launcher
-- Platform: Windows (cmd.exe)
-- Alternative to PowerShell for Windows systems
-- Provides similar functionality to PowerShell version
-- Best for: Legacy Windows systems or batch-only environments
+### 2. **start_minecraft.bat** - Batch Launcher
+- **Platform:** Windows (cmd.exe)
+- **Features:**
+  - Alternative to PowerShell for Windows systems
+  - Provides similar functionality to PowerShell version
+- **Best for:** Legacy Windows systems or batch-only environments
 
-#### 3. **start_minecraft.py** - Python Launcher
-- Platform: Windows and Linux
-- Cross-platform launcher using Python 3.6+
-- Automatic platform detection
-- Best for: Users with Python installed
+### 3. **start_minecraft.py** - Python Launcher
+- **Platform:** Windows and Linux
+- **Features:**
+  - Cross-platform launcher using Python 3.6+
+  - Automatic platform detection
+- **Best for:** Users with Python installed
 
-#### 4. **start_minecraft.sh** - Shell Launcher
-- Platform: Linux
-- Uses system-installed `minecraft-launcher`
-- Lightweight and efficient
-- Best for: Linux users with launcher already installed
+### 4. **start_minecraft.sh** - Shell Launcher
+- **Platform:** Linux
+- **Features:**
+  - Uses system-installed `minecraft-launcher`
+  - Lightweight and efficient
+- **Best for:** Linux users with launcher already installed
 
-## 🔧 Configuration
+## ⚙️ Configuration
 
 ### Customizing Java Version
 
@@ -311,12 +313,12 @@ python3 -m pip install requests  # If custom downloader is used
 python3 start_minecraft.py
 ```
 
-## 🔐 Security Considerations
+## 🔐 Security
 
 - **No system modification:** Portable installation makes no changes to Windows Registry or system files
 - **Local storage:** All game data remains in the portable directory; no files written to `%appdata%`
 - **Official sources:** Launcher and Java downloaded from official Mojang and Adoptium repositories
-- **Standalone**: Game doesn't depend on system-wide Java installation, reducing compatibility issues
+- **Standalone:** Game doesn't depend on system-wide Java installation, reducing compatibility issues
 
 ## 📝 File Reference
 
@@ -337,13 +339,14 @@ This project is licensed under the **GNU General Public License v3.0**. See [LIC
 
 To report issues or suggest improvements:
 
-1. **Check existing issues:** https://github.com/hemiipatu/minecraftportable/issues
-2. **Submit new issue:** https://github.com/hemiipatu/minecraftportable/issues/new
+1. **Check existing issues:** [https://github.com/hemiipatu/MinecraftPortable/issues](https://github.com/hemiipatu/MinecraftPortable/issues)
+2. **Submit a new issue:** [https://github.com/hemiipatu/MinecraftPortable/issues/new](https://github.com/hemiipatu/MinecraftPortable/issues/new)
 3. **Provide details:**
    - Operating system and version
-   - Launcher script used (PS1/BAT/PY/SH)
-   - Error message or unexpected behavior
-   - Steps to reproduce
+   - Launcher script used (`start_minecraft.ps1`, `start_minecraft.bat`, `start_minecraft.py`, or `start_minecraft.sh`)
+   - Java version and installation details (if custom)
+   - Full error message or description of unexpected behavior
+   - Steps to reproduce the issue
 
 ## 🔗 Related Resources
 
